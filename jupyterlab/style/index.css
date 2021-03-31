@@ -30,6 +30,10 @@
     background-color: rgba(153, 153, 153, 0.2);
 }
 
+.jp-RunningSessions-itemShutdown.jp-mod-styled {
+    height: 24px;
+}
+
 div.iframe-widget {
     height:100%;
     width:100%;

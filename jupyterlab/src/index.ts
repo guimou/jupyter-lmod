@@ -97,6 +97,7 @@ function save_collection(event): Promise<void | undefined> {
  */
 class LmodWidget extends Widget {
   protected loadedUList: HTMLUListElement;
+  protected loadednhUList: HTMLUListElement;
   protected availUList: HTMLUListElement;
   protected searchInput: HTMLInputElement;
   protected searchSource: Array<string>;
@@ -124,6 +125,14 @@ class LmodWidget extends Widget {
     this.node.insertAdjacentHTML('beforeend',
       `<div id="lmod" class="lm-CommandPalette-content">
           <div class="jp-RunningSessions-section">
+              <div class="jp-RunningSessions-sectionHeader" id="avail_header"><H2>Available Modules</H2>
+              </div>
+              <div class="jp-RunningSessions-sectionContainer">
+                  <ul class="jp-RunningSessions-sectionList" id="lmod_avail_list">
+                  </ul>
+              </div>
+          </div>
+          <div class="jp-RunningSessions-section">
               <div class="jp-RunningSessions-sectionHeader"><H2>Loaded Modules</H2>
                   <button
                     title="Create collection"
@@ -142,24 +151,24 @@ class LmodWidget extends Widget {
                   ></button>
               </div>
               <div class="jp-RunningSessions-sectionContainer">
-                  <ul class="jp-RunningSessions-sectionList" id="lmod_loaded_list">
+                  <ul class="jp-RunningSessions-sectionList" id="lmod_loaded_listnh">
                   </ul>
               </div>
-          </div>
-          <div class="jp-RunningSessions-section">
-              <div class="jp-RunningSessions-sectionHeader" id="avail_header"><H2>Available Modules</H2>
+              <div class="jp-RunningSessions-sectionHeader"><H2>Loaded Modules (full list)</H2>
               </div>
               <div class="jp-RunningSessions-sectionContainer">
-                  <ul class="jp-RunningSessions-sectionList" id="lmod_avail_list">
+                  <ul class="jp-RunningSessions-sectionList" id="lmod_loaded_list">
                   </ul>
               </div>
           </div>
       </div>`);
 
     this.loadedUList = this.node.querySelector('#lmod_loaded_list');
+    this.loadednhUList = this.node.querySelector('#lmod_loaded_listnh');
     this.availUList = this.node.querySelector('#lmod_avail_list');
 
     this.loadedUList.addEventListener('click', this.onClickModuleList.bind(this));
+    this.loadednhUList.addEventListener('click', this.onClickModuleList.bind(this));
     this.availUList.addEventListener('click', this.onClickModuleList.bind(this));
 
     const buttons = this.node.getElementsByClassName('jp-Lmod-collectionButton')
@@ -186,16 +195,21 @@ class LmodWidget extends Widget {
   }
 
   public update() {
-    Promise.all([lmodAPI.avail(), lmodAPI.list()])
+    Promise.all([lmodAPI.avail(), lmodAPI.list(), lmodAPI.listnh()])
     .then(values => {
         const avail_set = new Set<string>(values[0]);
         const modulelist = values[1].sort();
+        const modulelistnh = values[2].sort();
         const html_list = modulelist.map(item => createModuleItem(item, 'Unload'));
+        const html_listnh = modulelistnh.map(item => createModuleItem(item, 'Unload'));
 
         this.loadedUList.innerText = '';
         this.loadedUList.append(...html_list);
+        this.loadednhUList.innerText = '';
+        this.loadednhUList.append(...html_listnh);
 
         modulelist.map(item => avail_set.delete(item));
+        modulelistnh.map(item => avail_set.delete(item));
         this.searchSource = Array.from(avail_set);
         this.updateAvail();
         updateLauncher(modulelist);
@@ -248,6 +262,7 @@ async function setup_proxy_commands() {
     const title = server_process.launcher_entry.title;
     const newBrowserTab = server_process.new_browser_tab;
     const id = namespace + ':' + server_process.name;
+    const icon = server_process.icon_url;
     const launcher_item : ILauncher.IItemOptions = {
       command: command,
       args: {
@@ -258,6 +273,8 @@ async function setup_proxy_commands() {
       },
       category: 'Notebook'
     };
+
+    launcher_item.kernelIconUrl =  icon;
 
     if (server_process.launcher_entry.icon_url) {
       launcher_item.kernelIconUrl =  server_process.launcher_entry.icon_url;

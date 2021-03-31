@@ -11,3 +11,5 @@ jupyterlmod.egg-info/
 *.lock
 *env*/
 package-lock.json
+*.tar.gz
+*.tgz

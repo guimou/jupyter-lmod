@@ -14,9 +14,13 @@ SITE_POSTFIX = os.path.join("lib", "python" + sys.version[:3], "site-packages")
 
 MODULE_REGEX = re.compile(r"^([\w\-_+.\/]{1,}[^\/:])$", re.M)
 MODULE_REGEX_NO_HIDDEN = re.compile(r"^([^\W][\w\-_+.]*|[\w\-_+.\/]{1,}\/[\w][\w\-_.]*[^\/:])$", re.M)
+MODULE_REGEX_NO_HIDDEN_CUSTOM = re.compile(r"(?!.*\(H\))(?<=[0-9]\)\s)[^\s]*",re.M)
 
 async def module(command, *args):
-    cmd = LMOD_CMD, "python", "--terse", command, *args
+    if(command!='listnh'):
+        cmd = LMOD_CMD, "python", "--terse", command, *args
+    else:
+        cmd = LMOD_CMD, "python", "--redirect list"
 
     proc = await create_subprocess_shell(
         " ".join(cmd), stdout=PIPE, stderr=PIPE
@@ -70,6 +74,7 @@ class API(object):
     def __init__(self, show_cache_capacity=128):
         self.avail_cache = None
         self.list_cache = None
+        self.listnh_cache = None
         self.savelist_cache = None
         self.show_cache = OrderedDict()
         self.show_cache_capacity = show_cache_capacity
@@ -77,6 +82,7 @@ class API(object):
     def invalidate_module_caches(self):
         self.avail_cache = None
         self.list_cache = None
+        self.listnh_cache = None
         self.show_cache = OrderedDict()
 
     async def avail(self, *args):
@@ -100,6 +106,14 @@ class API(object):
                     self.list_cache[False] = re.findall(MODULE_REGEX_NO_HIDDEN, string)
                     self.list_cache[True] = re.findall(MODULE_REGEX, string)
         return self.list_cache[include_hidden]
+    
+    async def list_not_hidden(self):
+        if self.listnh_cache is None:
+            string = await module("listnh")
+            if string is not None:
+                if string != "No modules loaded":
+                    self.listnh_cache = re.findall(MODULE_REGEX_NO_HIDDEN_CUSTOM, string)
+        return self.listnh_cache
 
     async def freeze(self):
         modules = await self.list(include_hidden=False)
@@ -203,6 +217,7 @@ _lmod = API()
 
 avail = _lmod.avail
 list = _lmod.list
+listnh = _lmod.list_not_hidden
 freeze = _lmod.freeze
 load = _lmod.load
 reset = _lmod.reset

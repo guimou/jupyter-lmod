@@ -16,6 +16,13 @@ class Lmod {
     }
   }
 
+  async listnh() {
+    const response = await fetch(this.url + '/modulesnh');
+    if (response.status == 200) {
+      return response.json();
+    }
+  }
+
   async list(include_hidden=false) {
     let url = this.url;
     if (include_hidden) {

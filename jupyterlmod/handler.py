@@ -61,6 +61,12 @@ class LmodModules(IPythonHandler):
         result = await lmod.avail()
         self.finish(json.dumps(result))
 
+class LmodModulesNh(IPythonHandler):
+    @web.authenticated
+    async def get(self):
+        result = await lmod.listnh()
+        self.finish(json.dumps(result))
+
 class LmodModule(IPythonHandler):
     @web.authenticated
     async def get(self, module=None):
@@ -129,6 +135,7 @@ class FoldersHandler(IPythonHandler):
 default_handlers = [
     (r"/lmod", Lmod),
     (r"/lmod/modules", LmodModules),
+    (r"/lmod/modulesnh", LmodModulesNh),
     (r"/lmod/modules/(.*)", LmodModule),
     (r"/lmod/collections", LmodCollections),
     (r"/lmod/paths", LmodPaths),
