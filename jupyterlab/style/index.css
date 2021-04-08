@@ -31,8 +31,10 @@
 }
 
 .jp-RunningSessions-itemShutdown.jp-mod-styled {
-    height: 24px;
+    height: inherit;
     line-height: inherit;
+    background-color: lightgrey;
+    border-radius: 5px 5px 5px 5px;
 }
 
 div.iframe-widget {
