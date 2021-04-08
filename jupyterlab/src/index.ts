@@ -102,6 +102,7 @@ class LmodWidget extends Widget {
   protected availfeaturedUList: HTMLUListElement;
   protected searchInput: HTMLInputElement;
   protected searchSource: Array<string>;
+  protected searchSourceFeatured: Array<string>;
 
   constructor() {
     super();
@@ -220,7 +221,8 @@ class LmodWidget extends Widget {
 
         modulelist.map(item => avail_set.delete(item));
         modulelistfeatured.map(item => availfeatured_set.delete(item));
-        this.searchSource = Array.from(availfeatured_set);
+        this.searchSource = Array.from(avail_set);
+        this.searchSourceFeatured = Array.from(availfeatured_set);
         this.updateAvail();
         updateLauncher(modulelist);
     });
@@ -229,14 +231,22 @@ class LmodWidget extends Widget {
 
   protected updateAvail() {
     const input = this.searchInput.value;
+    this.availUList.innerText = '';
     this.availfeaturedUList.innerText = '';
 
     const result = this.searchSource.filter(
       str => str.toUpperCase().includes(input.toUpperCase())
     );
 
-    const html_list = result.map(item => createModuleItem(item, 'Load'));
-    this.availfeaturedUList.append(...html_list);
+    const html_list_avail = result.map(item => createModuleItem(item, 'Load'));
+    this.availUList.append(...html_list_avail);
+
+    const resultfeatured = this.searchSourceFeatured.filter(
+      str => str.toUpperCase().includes(input.toUpperCase())
+    ); 
+
+    const html_list_availfeatured = resultfeatured.map(item => createModuleItem(item, 'Load'));
+    this.availfeaturedUList.append(...html_list_availfeatured);
   }
 
   protected restore(event): Promise<void | undefined> {
