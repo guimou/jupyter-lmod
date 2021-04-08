@@ -32,6 +32,7 @@
 
 .jp-RunningSessions-itemShutdown.jp-mod-styled {
     height: 24px;
+    line-height: inherit;
 }
 
 div.iframe-widget {

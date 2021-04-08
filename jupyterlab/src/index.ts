@@ -97,8 +97,9 @@ function save_collection(event): Promise<void | undefined> {
  */
 class LmodWidget extends Widget {
   protected loadedUList: HTMLUListElement;
-  protected loadednhUList: HTMLUListElement;
+  protected loadedfeaturedUList: HTMLUListElement;
   protected availUList: HTMLUListElement;
+  protected availfeaturedUList: HTMLUListElement;
   protected searchInput: HTMLInputElement;
   protected searchSource: Array<string>;
 
@@ -125,15 +126,15 @@ class LmodWidget extends Widget {
     this.node.insertAdjacentHTML('beforeend',
       `<div id="lmod" class="lm-CommandPalette-content">
           <div class="jp-RunningSessions-section">
-              <div class="jp-RunningSessions-sectionHeader" id="avail_header"><H2>Available Modules</H2>
+              <div class="jp-RunningSessions-sectionHeader" id="avail_featured_header"><H2>Available Feat. Modules</H2>
               </div>
               <div class="jp-RunningSessions-sectionContainer">
-                  <ul class="jp-RunningSessions-sectionList" id="lmod_avail_list">
+                  <ul class="jp-RunningSessions-sectionList" id="lmod_avail_featured_list">
                   </ul>
               </div>
           </div>
           <div class="jp-RunningSessions-section">
-              <div class="jp-RunningSessions-sectionHeader"><H2>Loaded Modules</H2>
+              <div class="jp-RunningSessions-sectionHeader"><H2>Loaded Feat. Modules</H2>
                   <button
                     title="Create collection"
                     class="jp-Lmod-collectionButton jp-mod-styled jp-AddIcon"
@@ -151,7 +152,13 @@ class LmodWidget extends Widget {
                   ></button>
               </div>
               <div class="jp-RunningSessions-sectionContainer">
-                  <ul class="jp-RunningSessions-sectionList" id="lmod_loaded_listnh">
+                  <ul class="jp-RunningSessions-sectionList" id="lmod_loaded_featured_list">
+                  </ul>
+              </div>
+              <div class="jp-RunningSessions-sectionHeader"><H2>Available Modules (full list)</H2>
+              </div>
+              <div class="jp-RunningSessions-sectionContainer">
+                  <ul class="jp-RunningSessions-sectionList" id="lmod_avail_list">
                   </ul>
               </div>
               <div class="jp-RunningSessions-sectionHeader"><H2>Loaded Modules (full list)</H2>
@@ -164,12 +171,14 @@ class LmodWidget extends Widget {
       </div>`);
 
     this.loadedUList = this.node.querySelector('#lmod_loaded_list');
-    this.loadednhUList = this.node.querySelector('#lmod_loaded_listnh');
+    this.loadedfeaturedUList = this.node.querySelector('#lmod_loaded_featured_list');
     this.availUList = this.node.querySelector('#lmod_avail_list');
+    this.availfeaturedUList = this.node.querySelector('#lmod_avail_featured_list');
 
     this.loadedUList.addEventListener('click', this.onClickModuleList.bind(this));
-    this.loadednhUList.addEventListener('click', this.onClickModuleList.bind(this));
+    this.loadedfeaturedUList.addEventListener('click', this.onClickModuleList.bind(this));
     this.availUList.addEventListener('click', this.onClickModuleList.bind(this));
+    this.availfeaturedUList.addEventListener('click', this.onClickModuleList.bind(this));
 
     const buttons = this.node.getElementsByClassName('jp-Lmod-collectionButton')
     buttons['save-button'].addEventListener('click', save_collection);
@@ -195,22 +204,23 @@ class LmodWidget extends Widget {
   }
 
   public update() {
-    Promise.all([lmodAPI.avail(), lmodAPI.list(), lmodAPI.listnh()])
+    Promise.all([lmodAPI.avail(), lmodAPI.availfeatured(), lmodAPI.list(), lmodAPI.listfeatured()])
     .then(values => {
         const avail_set = new Set<string>(values[0]);
-        const modulelist = values[1].sort();
-        const modulelistnh = values[2].sort();
+        const availfeatured_set = new Set<string>(values[1]);
+        const modulelist = values[2].sort();
+        const modulelistfeatured = values[3].sort();
         const html_list = modulelist.map(item => createModuleItem(item, 'Unload'));
-        const html_listnh = modulelistnh.map(item => createModuleItem(item, 'Unload'));
+        const html_listfeatured = modulelistfeatured.map(item => createModuleItem(item, 'Unload'));
 
         this.loadedUList.innerText = '';
         this.loadedUList.append(...html_list);
-        this.loadednhUList.innerText = '';
-        this.loadednhUList.append(...html_listnh);
+        this.loadedfeaturedUList.innerText = '';
+        this.loadedfeaturedUList.append(...html_listfeatured);
 
         modulelist.map(item => avail_set.delete(item));
-        modulelistnh.map(item => avail_set.delete(item));
-        this.searchSource = Array.from(avail_set);
+        modulelistfeatured.map(item => availfeatured_set.delete(item));
+        this.searchSource = Array.from(availfeatured_set);
         this.updateAvail();
         updateLauncher(modulelist);
     });
@@ -219,14 +229,14 @@ class LmodWidget extends Widget {
 
   protected updateAvail() {
     const input = this.searchInput.value;
-    this.availUList.innerText = '';
+    this.availfeaturedUList.innerText = '';
 
     const result = this.searchSource.filter(
       str => str.toUpperCase().includes(input.toUpperCase())
     );
 
     const html_list = result.map(item => createModuleItem(item, 'Load'));
-    this.availUList.append(...html_list);
+    this.availfeaturedUList.append(...html_list);
   }
 
   protected restore(event): Promise<void | undefined> {

@@ -9,18 +9,18 @@ from collections import OrderedDict
 from functools import partial, wraps
 
 LMOD_CMD = os.environ["LMOD_CMD"]
+LMOD_PACKAGE_PATH = os.environ["LMOD_PACKAGE_PATH"]
 LMOD_SYSTEM_NAME = os.environ.get("LMOD_SYSTEM_NAME", "")
 SITE_POSTFIX = os.path.join("lib", "python" + sys.version[:3], "site-packages")
 
 MODULE_REGEX = re.compile(r"^([\w\-_+.\/]{1,}[^\/:])$", re.M)
 MODULE_REGEX_NO_HIDDEN = re.compile(r"^([^\W][\w\-_+.]*|[\w\-_+.\/]{1,}\/[\w][\w\-_.]*[^\/:])$", re.M)
-MODULE_REGEX_NO_HIDDEN_CUSTOM = re.compile(r"(?!.*\(H\))(?<=[0-9]\)\s)[^\s]*",re.M)
 
 async def module(command, *args):
-    if(command!='listnh'):
+    if(command!='availfeatured'):
         cmd = LMOD_CMD, "python", "--terse", command, *args
     else:
-        cmd = LMOD_CMD, "python", "--redirect list"
+        cmd = "MODULEPATH=" + LMOD_PACKAGE_PATH + "modules/featured", LMOD_CMD, "python", "--terse av"
 
     proc = await create_subprocess_shell(
         " ".join(cmd), stdout=PIPE, stderr=PIPE
@@ -74,7 +74,8 @@ class API(object):
     def __init__(self, show_cache_capacity=128):
         self.avail_cache = None
         self.list_cache = None
-        self.listnh_cache = None
+        self.list_featured_cache = None
+        self.avail_featured_cache = None
         self.savelist_cache = None
         self.show_cache = OrderedDict()
         self.show_cache_capacity = show_cache_capacity
@@ -82,12 +83,13 @@ class API(object):
     def invalidate_module_caches(self):
         self.avail_cache = None
         self.list_cache = None
-        self.listnh_cache = None
+        self.list_featured_cache = None
+        self.avail_featured_cache = None
         self.show_cache = OrderedDict()
 
     async def avail(self, *args):
         if self.avail_cache is None:
-            string = await module("avail", *args)
+            string = (await module("avail", *args)).strip()
             if string is not None:
                 modules = re.findall(MODULE_REGEX, string)
                 modules.sort(key=lambda v: v.split("/")[0])
@@ -96,10 +98,21 @@ class API(object):
             self.avail_cache = modules
         return self.avail_cache
 
+    async def avail_featured(self, *args):
+        if self.avail_featured_cache is None:
+            string = (await module("availfeatured", *args)).strip()
+            if string is not None:
+                modules = re.findall(MODULE_REGEX, string)
+                modules.sort(key=lambda v: v.split("/")[0])
+            else:
+                modules = []
+            self.avail_featured_cache = modules
+        return self.avail_featured_cache
+
     async def list(self, include_hidden=False):
         if self.list_cache is None:
             self.list_cache = {True: [], False:[]}
-            string = await module("list")
+            string = (await module("list")).strip()
             if string is not None:
                 string = string.strip()
                 if string != "No modules loaded":
@@ -107,13 +120,16 @@ class API(object):
                     self.list_cache[True] = re.findall(MODULE_REGEX, string)
         return self.list_cache[include_hidden]
     
-    async def list_not_hidden(self):
-        if self.listnh_cache is None:
-            string = await module("listnh")
-            if string is not None:
-                if string != "No modules loaded":
-                    self.listnh_cache = re.findall(MODULE_REGEX_NO_HIDDEN_CUSTOM, string)
-        return self.listnh_cache
+    async def list_featured(self):
+        if self.list_featured_cache is None:
+            string_list = (await module("list")).strip()
+            string_avail_featured = (await module("availfeatured")).strip()
+            if (string_list is not None) and (string_avail_featured is not None):
+                if string_list != "No modules loaded":
+                    module_list = re.findall(MODULE_REGEX, string_list)
+                    modules_available_featured = re.findall(MODULE_REGEX, string_avail_featured)
+                    self.list_featured_cache = [value for value in modules_available_featured if value in module_list]
+        return self.list_featured_cache
 
     async def freeze(self):
         modules = await self.list(include_hidden=False)
@@ -216,8 +232,9 @@ class API(object):
 _lmod = API()
 
 avail = _lmod.avail
+availfeatured = _lmod.avail_featured
 list = _lmod.list
-listnh = _lmod.list_not_hidden
+listfeatured = _lmod.list_featured
 freeze = _lmod.freeze
 load = _lmod.load
 reset = _lmod.reset

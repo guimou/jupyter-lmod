@@ -16,8 +16,8 @@ class Lmod {
     }
   }
 
-  async listnh() {
-    const response = await fetch(this.url + '/modulesnh');
+  async availfeatured() {
+    const response = await fetch(this.url + '/modulesavailfeatured');
     if (response.status == 200) {
       return response.json();
     }
@@ -29,6 +29,13 @@ class Lmod {
       url += '?all=true';
     }
     const response = await fetch(url);
+    if (response.status == 200) {
+      return response.json();
+    }
+  }
+
+  async listfeatured() {
+    const response = await fetch(this.url + '/moduleslistfeatured');
     if (response.status == 200) {
       return response.json();
     }
