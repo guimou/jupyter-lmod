@@ -122,6 +122,7 @@ class API(object):
     
     async def list_featured(self):
         if self.list_featured_cache is None:
+            self.list_featured_cache = []
             string_list = (await module("list")).strip()
             string_avail_featured = (await module("availfeatured")).strip()
             if (string_list is not None) and (string_avail_featured is not None):
