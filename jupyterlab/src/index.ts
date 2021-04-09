@@ -125,7 +125,13 @@ class LmodWidget extends Widget {
     this.node.insertAdjacentElement('afterbegin', search_div);
 
     this.node.insertAdjacentHTML('beforeend',
-      `<div id="lmod" class="lm-CommandPalette-content">
+      `<div class="jp-RunningSessions-sectionHeader">
+          <h2>Tools</h2>
+          <button title="Create collection" class="jp-Lmod-collectionButton jp-mod-styled jp-AddIcon" id="save-button"></button>
+          <button title="Restore collection" class="jp-Lmod-collectionButton jp-mod-styled jp-UndoIcon" id="restore-button"></button>
+          <button title="Generate Python code" class="jp-Lmod-collectionButton jp-mod-styled jp-CopyIcon" id="export-button"></button>
+        </div>
+        <div id="lmod" class="lm-CommandPalette-content">
           <div class="jp-RunningSessions-section">
               <div class="jp-RunningSessions-sectionHeader" id="avail_featured_header"><H2>Available Feat. Modules</H2>
               </div>
@@ -136,21 +142,6 @@ class LmodWidget extends Widget {
           </div>
           <div class="jp-RunningSessions-section">
               <div class="jp-RunningSessions-sectionHeader"><H2>Loaded Feat. Modules</H2>
-                  <button
-                    title="Create collection"
-                    class="jp-Lmod-collectionButton jp-mod-styled jp-AddIcon"
-                    id="save-button"
-                  ></button>
-                  <button
-                    title="Restore collection"
-                    class="jp-Lmod-collectionButton jp-mod-styled jp-UndoIcon"
-                    id="restore-button"
-                  ></button>
-                  <button
-                    title="Generate Python code"
-                    class="jp-Lmod-collectionButton jp-mod-styled jp-CopyIcon"
-                    id="export-button"
-                  ></button>
               </div>
               <div class="jp-RunningSessions-sectionContainer">
                   <ul class="jp-RunningSessions-sectionList" id="lmod_loaded_featured_list">
