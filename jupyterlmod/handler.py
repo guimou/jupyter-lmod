@@ -138,6 +138,12 @@ class FoldersHandler(IPythonHandler):
         result = [path[:-1] for path in result]
         self.finish(json.dumps(result))
 
+class ResetHandler(IPythonHandler):
+    @web.authenticated
+    async def get(self):
+        result = await lmod.reset()
+        self.finish(json.dumps(result))
+
 default_handlers = [
     (r"/lmod", Lmod),
     (r"/lmod/modules", LmodModules),
@@ -146,5 +152,6 @@ default_handlers = [
     (r"/lmod/modules/(.*)", LmodModule),
     (r"/lmod/collections", LmodCollections),
     (r"/lmod/paths", LmodPaths),
-    (r"/lmod/folders/(.*)", FoldersHandler)
+    (r"/lmod/folders/(.*)", FoldersHandler),
+    (r"/lmod/reset", ResetHandler)
 ]
