@@ -89,9 +89,9 @@ class API(object):
 
     async def avail(self, *args):
         if self.avail_cache is None:
-            string = (await module("avail", *args)).strip()
+            string = await module("avail", *args)
             if string is not None:
-                modules = re.findall(MODULE_REGEX, string)
+                modules = re.findall(MODULE_REGEX, string.strip())
                 modules.sort(key=lambda v: v.split("/")[0])
             else:
                 modules = []
@@ -100,9 +100,9 @@ class API(object):
 
     async def avail_featured(self, *args):
         if self.avail_featured_cache is None:
-            string = (await module("availfeatured", *args)).strip()
+            string = await module("availfeatured", *args)
             if string is not None:
-                modules = re.findall(MODULE_REGEX, string)
+                modules = re.findall(MODULE_REGEX, string.strip())
                 modules.sort(key=lambda v: v.split("/")[0])
             else:
                 modules = []
@@ -112,7 +112,7 @@ class API(object):
     async def list(self, include_hidden=False):
         if self.list_cache is None:
             self.list_cache = {True: [], False:[]}
-            string = (await module("list")).strip()
+            string = await module("list")
             if string is not None:
                 string = string.strip()
                 if string != "No modules loaded":
@@ -123,12 +123,12 @@ class API(object):
     async def list_featured(self):
         if self.list_featured_cache is None:
             self.list_featured_cache = []
-            string_list = (await module("list")).strip()
-            string_avail_featured = (await module("availfeatured")).strip()
+            string_list = await module("list")
+            string_avail_featured = await module("availfeatured")
             if (string_list is not None) and (string_avail_featured is not None):
-                if string_list != "No modules loaded":
-                    module_list = re.findall(MODULE_REGEX, string_list)
-                    modules_available_featured = re.findall(MODULE_REGEX, string_avail_featured)
+                if string_list.strip() != "No modules loaded":
+                    module_list = re.findall(MODULE_REGEX, string_list.strip())
+                    modules_available_featured = re.findall(MODULE_REGEX, string_avail_featured.strip())
                     self.list_featured_cache = [value for value in modules_available_featured if value in module_list]
         return self.list_featured_cache
 
